@@ -35,11 +35,10 @@ function love.draw()
     playerMouseAngle(), -- rotation in radians
     nil, -- scale x
     nil, -- scale y
-    sprites.player:getWidth()/2, -- ox: location of origin x, default is left
-    sprites.player:getHeight()/2 -- oy: location of origin y, default is top
+    sprites.player:getWidth() / 2, -- ox: location of origin x, default is left
+    sprites.player:getHeight() / 2 -- oy: location of origin y, default is top
   )
 end
-
 
 -- Converting degrees into radians is degrees * pi/180
 -- angle between 2 points: atan2(y1-y2, x1-x2)
