@@ -1,0 +1,10 @@
+{
+    "diagnostics.globals": [
+        "spawnZombie",
+        "playerMouseAngle",
+        "sprites",
+        "player",
+        "zombies",
+        "zombiePlayerAngle"
+    ]
+}
