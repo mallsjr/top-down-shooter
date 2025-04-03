@@ -71,10 +71,12 @@ end
 -- Converting degrees into radians is degrees * pi/180
 -- angle between 2 points: atan2(y1-y2, x1-x2)
 
+-- used to point the playey towards the mouse
 function playerMouseAngle()
   return math.atan2(player.y - love.mouse.getY(), player.x - love.mouse.getX()) + math.pi
 end
 
+-- used to point the zombies at the player
 function zombiePlayerAngle(enemy)
   return math.atan2(player.y - enemy.y, player.x - enemy.x)
 end
