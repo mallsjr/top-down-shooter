@@ -5,6 +5,7 @@
         "sprites",
         "player",
         "zombies",
-        "zombiePlayerAngle"
+        "zombiePlayerAngle",
+        "distanceBetween"
     ]
 }
