@@ -42,9 +42,21 @@ function love.update(dt)
     end
   end
 
+  -- shooting bullets in direction of mouse
   for _, b in ipairs(bullets) do
     b.x = b.x + (math.cos(b.direction) * b.speed * dt)
     b.y = b.y + (math.sin(b.direction) * b.speed * dt)
+  end
+
+  -- removing bullets
+  -- need to loop in reverse order because iterating while removing items breaks things
+  for i = #bullets, 1, -1 do
+    local b = bullets[i]
+    if b.x < 0 or b.y < 0 or b.x > love.graphics.getWidth() or b.y > love.graphics.getHeight() then
+      -- this removes items from list and reorders them
+      -- again when doing in loop reverse the order (last to first iteration)
+      table.remove(bullets, i)
+    end
   end
 end
 
