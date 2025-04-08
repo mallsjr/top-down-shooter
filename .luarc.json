@@ -8,5 +8,8 @@
         "zombiePlayerAngle",
         "distanceBetween",
         "bullets"
+    ],
+    "diagnostics.disable": [
+        "lowercase-global"
     ]
 }

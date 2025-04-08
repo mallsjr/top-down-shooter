@@ -13,6 +13,10 @@ function love.load()
 
   zombies = {}
   bullets = {}
+
+  gameState = 2
+  maxTime = 2 -- maximum time before spawning in zombie
+  timer = maxTime -- count down till spawn of zombie
 end
 
 function love.update(dt)
@@ -38,6 +42,7 @@ function love.update(dt)
       -- ending the game by removing all zombies (Game Over)
       for i, _ in ipairs(zombies) do
         zombies[i] = nil
+        gameState = 1 -- ending the round
       end
     end
   end
@@ -83,6 +88,19 @@ function love.update(dt)
     local b = bullets[i]
     if b.dead == true then
       table.remove(bullets, i)
+    end
+  end
+
+  if gameState == 2 then
+    -- counting down to spawn zombie
+    -- once timer hits 0 spawn a zombie
+    -- also update the max time to be 95% of what it was
+    -- and set that as the new maxtime, while setting timer to that new time.
+    timer = timer - dt
+    if timer <= 0 then
+      spawnZombie()
+      maxTime = 0.95 * maxTime
+      timer = maxTime
     end
   end
 end
@@ -142,10 +160,28 @@ end
 
 function spawnZombie()
   local zombie = {}
-  zombie.x = math.random(0, love.graphics.getWidth())
-  zombie.y = math.random(0, love.graphics.getHeight())
+
+  -- zombie.x = math.random(0, love.graphics.getWidth())
+  -- zombie.y = math.random(0, love.graphics.getHeight())
+  zombie.x = 0
+  zombie.y = 0
   zombie.speed = 100
   zombie.dead = false
+
+  local side = math.random(1, 4)
+  if side == 1 then
+    zombie.x = -30
+    zombie.y = math.random(0, love.graphics.getHeight())
+  elseif side == 2 then
+    zombie.x = love.graphics.getWidth() + 30
+    zombie.y = math.random(0, love.graphics.getHeight())
+  elseif side == 3 then
+    zombie.x = math.random(0, love.graphics.getWidth())
+    zombie.y = -30
+  else
+    zombie.x = math.random(0, love.graphics.getWidth())
+    zombie.y = love.graphics.getHeight() + 30
+  end
 
   table.insert(zombies, zombie)
 end
