@@ -1,5 +1,7 @@
 ---@diagnostic disable: deprecated
 function love.load()
+  math.randomseed(os.time())
+
   sprites = {}
   sprites.background = love.graphics.newImage("sprites/background.png")
   sprites.bullet = love.graphics.newImage("sprites/bullet.png")
@@ -11,26 +13,31 @@ function love.load()
   player.y = love.graphics.getHeight() / 2
   player.speed = 180 -- multiplying the speed wanted by 60 to account for dt (3*60)
 
+  myFont = love.graphics.newFont(30)
+
   zombies = {}
   bullets = {}
 
-  gameState = 2
+  gameState = 1 -- gameState 1 is main menu and 2 is gameplay
+  score = 0
   maxTime = 2 -- maximum time before spawning in zombie
   timer = maxTime -- count down till spawn of zombie
 end
 
 function love.update(dt)
-  if love.keyboard.isDown("d") then
-    player.x = player.x + player.speed * dt
-  end
-  if love.keyboard.isDown("a") then
-    player.x = player.x - player.speed * dt
-  end
-  if love.keyboard.isDown("w") then
-    player.y = player.y - player.speed * dt
-  end
-  if love.keyboard.isDown("s") then
-    player.y = player.y + player.speed * dt
+  if gameState == 2 then
+    if love.keyboard.isDown("d") and player.x < love.graphics.getWidth() then
+      player.x = player.x + player.speed * dt
+    end
+    if love.keyboard.isDown("a") and player.x > 0 then
+      player.x = player.x - player.speed * dt
+    end
+    if love.keyboard.isDown("w") and player.y > 0 then
+      player.y = player.y - player.speed * dt
+    end
+    if love.keyboard.isDown("s") and player.y < love.graphics.getHeight() then
+      player.y = player.y + player.speed * dt
+    end
   end
 
   -- zombie movement
@@ -43,6 +50,8 @@ function love.update(dt)
       for i, _ in ipairs(zombies) do
         zombies[i] = nil
         gameState = 1 -- ending the round
+        player.x = love.graphics.getWidth() / 2
+        player.y = love.graphics.getHeight() / 2
       end
     end
   end
@@ -71,6 +80,7 @@ function love.update(dt)
         -- there is a collision between zombie and bullet
         z.dead = true
         b.dead = true
+        score = score + 1
       end
     end
   end
@@ -107,6 +117,14 @@ end
 
 function love.draw()
   love.graphics.draw(sprites.background, 0, 0)
+
+  if gameState == 1 then
+    love.graphics.setFont(myFont)
+    love.graphics.printf("Click anywhere to begin!", 0, 50, love.graphics.getWidth(), "center")
+  end
+
+  love.graphics.printf("Score: " .. score, 0, love.graphics.getHeight() - 100, love.graphics.getWidth(), "center")
+
   love.graphics.draw(
     sprites.player,
     player.x,
@@ -192,9 +210,14 @@ function love.keypressed(key)
   end
 end
 
-function love.mousepressed(x, y, button)
-  if button == 1 then
+function love.mousepressed(_, _, button) -- _'s are x and y
+  if button == 1 and gameState == 2 then
     spawnBullet()
+  elseif button == 1 and gameState == 1 then
+    gameState = 2
+    maxTime = 2
+    timer = maxTime
+    score = 0
   end
 end
 
