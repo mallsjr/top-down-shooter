@@ -12,6 +12,7 @@ function love.load()
   player.x = love.graphics.getWidth() / 2
   player.y = love.graphics.getHeight() / 2
   player.speed = 180 -- multiplying the speed wanted by 60 to account for dt (3*60)
+  player.hit = 0
 
   myFont = love.graphics.newFont(30)
 
@@ -46,12 +47,21 @@ function love.update(dt)
     z.x = z.x + (math.cos(zombiePlayerAngle(z)) * z.speed * dt)
     z.y = z.y + (math.sin(zombiePlayerAngle(z)) * z.speed * dt)
     if distanceBetween(z.x, z.y, player.x, player.y) < 30 then
-      -- ending the game by removing all zombies (Game Over)
-      for i, _ in ipairs(zombies) do
-        zombies[i] = nil
-        gameState = 1 -- ending the round
-        player.x = love.graphics.getWidth() / 2
-        player.y = love.graphics.getHeight() / 2
+      player.hit = player.hit + 1
+      player.speed = 240
+      z.dead = true
+
+      if player.hit > 1 then
+        -- ending the game by removing all zombies (Game Over)
+        -- game over hit more than once
+        for i, _ in ipairs(zombies) do
+          zombies[i] = nil
+          gameState = 1 -- ending the round
+          player.x = love.graphics.getWidth() / 2
+          player.y = love.graphics.getHeight() / 2
+          player.speed = 180
+          player.hit = 0
+        end
       end
     end
   end
@@ -125,6 +135,10 @@ function love.draw()
 
   love.graphics.printf("Score: " .. score, 0, love.graphics.getHeight() - 100, love.graphics.getWidth(), "center")
 
+  if player.hit > 0 then
+    --change player color
+    love.graphics.setColor(1, 0, 0)
+  end
   love.graphics.draw(
     sprites.player,
     player.x,
@@ -135,6 +149,9 @@ function love.draw()
     sprites.player:getWidth() / 2, -- ox: location of origin x, default is left
     sprites.player:getHeight() / 2 -- oy: location of origin y, default is top
   )
+
+  --setting color back to normal
+  love.graphics.setColor(1, 1, 1)
 
   for _, z in ipairs(zombies) do
     love.graphics.draw(
