@@ -2,6 +2,9 @@
 function love.load()
   math.randomseed(os.time())
 
+  local joysticks = love.joystick.getJoysticks()
+  joystick = joysticks[1]
+
   sprites = {}
   sprites.background = love.graphics.newImage("sprites/background.png")
   sprites.bullet = love.graphics.newImage("sprites/bullet.png")
@@ -13,32 +16,84 @@ function love.load()
   player.y = love.graphics.getHeight() / 2
   player.speed = 180 -- multiplying the speed wanted by 60 to account for dt (3*60)
   player.hit = 0
+  player.width = sprites.player:getWidth()
+  player.height = sprites.player:getHeight()
+  lastRightStickAngle = 0 -- Initialize the last angle
 
   myFont = love.graphics.newFont(30)
 
   zombies = {}
   bullets = {}
+  fireCooldown = 0.2 -- Adjust this value to control the fire rate (seconds)
+  timeSinceLastFire = 0
 
   gameState = 1 -- gameState 1 is main menu and 2 is gameplay
   score = 0
   maxTime = 2 -- maximum time before spawning in zombie
   timer = maxTime -- count down till spawn of zombie
+  deadzone = 0.15
 end
 
 function love.update(dt)
+  --if gameState == 2 then
+  --  if love.keyboard.isDown("d") and player.x < love.graphics.getWidth() then
+  --    player.x = player.x + player.speed * dt
+  --  end
+  --  if love.keyboard.isDown("a") and player.x > 0 then
+  --    player.x = player.x - player.speed * dt
+  --  end
+  --  if love.keyboard.isDown("w") and player.y > 0 then
+  --    player.y = player.y - player.speed * dt
+  --  end
+  --  if love.keyboard.isDown("s") and player.y < love.graphics.getHeight() then
+  --    player.y = player.y + player.speed * dt
+  --  end
+  --end
+
+  if not joystick then
+    return
+  end
+
+  local leftX = joystick:getGamepadAxis("leftx")
+  local leftY = joystick:getGamepadAxis("lefty")
+  local rightX = joystick:getGamepadAxis("rightx")
+  local rightY = joystick:getGamepadAxis("righty")
+
+  -- Apply deadzone
+  if math.abs(leftX) < deadzone then
+    leftX = 0
+  end
+  if math.abs(leftY) < deadzone then
+    leftY = 0
+  end
+  if math.abs(rightX) < deadzone then
+    rightX = 0
+  end
+  if math.abs(rightY) < deadzone then
+    rightY = 0
+  end
+
   if gameState == 2 then
-    if love.keyboard.isDown("d") and player.x < love.graphics.getWidth() then
-      player.x = player.x + player.speed * dt
+    -- Calculate potential new position
+    local newX = player.x + dt * player.speed * leftX
+    local newY = player.y + dt * player.speed * leftY
+
+    -- X-axis bounds checking (top-left origin)
+    if newX > 0 and newX < love.graphics.getWidth() - player.width then
+      player.x = newX
     end
-    if love.keyboard.isDown("a") and player.x > 0 then
-      player.x = player.x - player.speed * dt
+
+    -- Y-axis bounds checking (top-left origin)
+    if newY > 0 and newY < love.graphics.getHeight() - player.height then
+      player.y = newY
     end
-    if love.keyboard.isDown("w") and player.y > 0 then
-      player.y = player.y - player.speed * dt
-    end
-    if love.keyboard.isDown("s") and player.y < love.graphics.getHeight() then
-      player.y = player.y + player.speed * dt
-    end
+  end
+
+  timeSinceLastFire = timeSinceLastFire + dt
+  -- Check for right trigger press AND if the cooldown has expired
+  if joystick and joystick:getGamepadAxis("triggerright") > 0.1 and timeSinceLastFire >= fireCooldown then
+    spawnBullet()
+    timeSinceLastFire = 0 -- Reset the cooldown timer
   end
 
   -- zombie movement
@@ -143,7 +198,7 @@ function love.draw()
     sprites.player,
     player.x,
     player.y,
-    playerMouseAngle(), -- rotation in radians
+    getRightStickAngle(), -- rotation in radians
     nil, -- scale x
     nil, -- scale y
     sprites.player:getWidth() / 2, -- ox: location of origin x, default is left
@@ -243,7 +298,7 @@ function spawnBullet()
   bullet.x = player.x
   bullet.y = player.y
   bullet.speed = 500
-  bullet.direction = playerMouseAngle()
+  bullet.direction = getRightStickAngle()
   bullet.dead = false
 
   table.insert(bullets, bullet)
@@ -251,4 +306,25 @@ end
 
 function distanceBetween(x1, y1, x2, y2)
   return math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2)
+end
+
+function getRightStickAngle()
+  if not joystick then
+    return lastRightStickAngle -- Or some default angle
+  end
+
+  local rightX = joystick:getGamepadAxis("rightx")
+  local rightY = joystick:getGamepadAxis("righty")
+
+  -- Apply a deadzone to avoid rotation when the stick is near the center
+  if math.abs(rightX) < 0.1 and math.abs(rightY) < 0.1 then
+    return lastRightStickAngle -- Use the last known angle
+  end
+
+  -- Calculate the angle using atan2
+  local angle = math.atan2(rightY, rightX)
+
+  lastRightStickAngle = angle -- Store the new angle
+
+  return angle
 end
